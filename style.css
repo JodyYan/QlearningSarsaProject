@@ -1,0 +1,57 @@
+/* style.css */
+#gridWorld {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    background-color: #fff;
+}
+
+.grid-cell {
+    border-right: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    color: #4b5563;
+}
+
+/* Borders for edge of grid */
+.grid-cell:nth-child(12n) {
+    border-right: none;
+}
+.grid-cell:nth-last-child(-n+12) {
+    border-bottom: none;
+}
+
+.cell-start {
+    background-color: #d1fae5; /* green-100 */
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.cell-goal {
+    background-color: #fef08a; /* yellow-200 */
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.cell-cliff {
+    background-color: #9ca3af; /* gray-400 */
+}
+
+/* Agent rendering element */
+#agent {
+    position: absolute;
+    width: 60%;
+    height: 60%;
+    background-color: #3b82f6; /* blue-500 */
+    border-radius: 50%;
+    transition: all 0s linear;
+    z-index: 10;
+}
+
+.arrow {
+    pointer-events: none;
+}

@@ -1,38 +1,33 @@
-# Q-learning vs SARSA on Cliff Walking
+# Interactive Q-learning vs SARSA Web Lab
 
-This project provides a comprehensive comparison between two fundamental Reinforcement Learning algorithms: **Q-learning** (off-policy) and **SARSA** (on-policy), applied to the classic Gridworld "Cliff Walking" environment.
+This project provides a fully interactive Web Application simulating **Q-learning** and **SARSA** reinforcement learning algorithms in the classic 4x12 **Cliff Walking** environment. 
 
-## Overview
-- **Environment**: 4x12 Cliff Walking Gridworld.
-- **Parameters**: ε (Epsilon) = 0.1, α (Alpha) = 0.5, γ (Gamma) = 1.0. 
-- **Episodes & Runs**: Average results are taken over 50 independent runs, with each run simulating 500 episodes.
+Developed entirely using JavaScript, HTML5, and TailwindCSS, this tool visualizes grid-world behaviors matching the rigorous specifications of Sutton & Barto's *Reinforcement Learning: An Introduction*.
 
-### Deliverables
-1. `main.py`: Contains the logic for the RL agents and environment. Runs the experiments and generates the resulting maps/graphs.
-2. `reward_plot.png`: Smoothing plot of the sum of rewards per episode highlighting the statistical difference in convergence between the two algorithms.
-3. `policy_map.png`: A visual grid map showing the final policies learned by both algorithms.
-4. `report.pdf`: A technical report detailing the mathematical, analytical, and practical differences between Q-learning and SARSA.
-5. `index.html`: A static web page designed to host the project on GitHub Pages, including embeded results and access to the technical report.
+## Live Demo
+Check out the simulation running on GitHub Pages:
+**[View Interactive RL Lab](https://JodyYan.github.io/QlearningSarsaProject/)**
 
-## How to Run Locally
+## Setup & Parameters
+According to the textbook standard:
+- **State Space**: 4x12 grid. Start at `(3,0)`. Goal at `(3,11)`. Cliff from `(3,1)` to `(3,10)`.
+- **Epsilon (ε)**: `0.1` (10% exploration rate).
+- **Alpha (α)**: `0.1` (Learning rate).
+- **Gamma (γ)**: `0.9` (Discount factor).
+- **Rewards**: 
+    - `-1` for every safe transition.
+    - `-100` for falling into the cliff (the agent gets reset to the start).
 
-### Requirements
-You will need `Python 3` and the following libraries:
-- `numpy`
-- `matplotlib`
-- `fpdf2`
+## Features
+1. **Real-time Agent Simulation**: Watch the agent (blue dot) explore the grid visually.
+2. **Dynamic Policy Layout**: The learned policy (arrows) updates continuously as the agent learns.
+3. **Reward Charting**: Chart.js integration dynamically charts the `Episode` vs `Sum of Rewards` convergence.
+4. **Speed Control**: Use the slider to slow down execution to study exploration vs exploitation, or max it out to fast-forward `500 episodes` rapidly!
+5. **PDF Report Export**: Built with `jsPDF` and `html2canvas` to automatically capture the simulation results, charts, and theory explanations into a downloadable PDF summary!
 
-Install them via pip:
-```bash
-pip install numpy matplotlib fpdf2
-```
+## Theory Validated
+- **Q-learning**: Off-policy configuration learns the optimal path (kissing the cliff edge). When evaluating at the end, the path length produces an optimal reward `-13`. However, the constant random exploration during learning causes the agent to fall off the cliff often, making the training reward average lower.
+- **SARSA**: On-policy configuration learns an inherently safer but suboptimal path by walking upwards first, keeping its distance from the cliff. When simulated, this path is longer (reward `-17`), but because it factors in the risk of exploration, it results in fewer cliff falls and a smoother convergence curve during training.
 
-### Execution
-Run the script to run the 50 trial runs (it may take a few seconds). 
-```bash
-python main.py
-```
-This will generate `reward_plot.png`, `policy_map.png`, and `report.pdf` in your current directory.
-
-## GitHub Pages Deployment
-If you fork/download this repository, it is ready to be hosted as a GitHub page. See the instructions below.
+## Usage
+Simply clone the repository and open `index.html` in any modern web browser to interact. No server needed!
