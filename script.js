@@ -97,13 +97,19 @@ function initGrid() {
 
 function moveAgentUI(r, c) {
     const agent = document.getElementById('agent');
-    // Cell size is % based on grid rows/cols
     const cellWidth = 100 / COLS;
     const cellHeight = 100 / ROWS;
     
+    // Agent size is 60% of a cell
+    const agentWidth = cellWidth * 0.6;
+    const agentHeight = cellHeight * 0.6;
+    
+    agent.style.width = `${agentWidth}%`;
+    agent.style.height = `${agentHeight}%`;
+    
     // Center in cell
-    agent.style.left = `calc(${c * cellWidth}% + ${(cellWidth / 2)}% - 30%)`; // 30% is half of 60% agent width relative to cell
-    agent.style.top = `calc(${r * cellHeight}% + ${(cellHeight / 2)}% - 30%)`;
+    agent.style.left = `calc(${c * cellWidth}% + ${(cellWidth / 2)}% - ${agentWidth / 2}%)`;
+    agent.style.top = `calc(${r * cellHeight}% + ${(cellHeight / 2)}% - ${agentHeight / 2}%)`;
 }
 
 function updatePolicyUI() {

@@ -44,11 +44,9 @@
 /* Agent rendering element */
 #agent {
     position: absolute;
-    width: 60%;
-    height: 60%;
     background-color: #3b82f6; /* blue-500 */
     border-radius: 50%;
-    transition: all 0s linear;
+    transition: all 0.1s linear;
     z-index: 10;
 }
 
