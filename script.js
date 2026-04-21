@@ -288,6 +288,36 @@ function updatePolicyUI(qTable, containerId) {
     }
 }
 
+function updateAnalysisText() {
+    let performanceText = "";
+    let policyText = "";
+
+    if (EPSILON === 0) {
+        performanceText = `由於探索機率 (ε) 被設定為 0，也就是完全沒有隨機探索（純 Greed 策略）。這意味著 Q-learning 與 SARSA 將表現得極度相似，不再具備尋找其他未知更優路徑的能力。初始如果沒有幸運踩中最佳結點，代理人可能會停滯不前。而在這種條件下，由於沒有了隨機摔下懸崖的風險，兩者的收斂表現將趨於一致。`;
+        policyText = `在 0 探索風險下，這兩種演算法最終學到的路徑通常走向相同。既然不存在隨機失足的風險，SARSA 便沒有任何理由去刻意繞遠路，都會傾向尋找最短路徑。`;
+    } 
+    else if (EPSILON >= 0.3) {
+        performanceText = `探索機率被設定得相當高 (ε=${EPSILON})，導致代理人在行走時有很高的機會不受控地亂走。儘管 Q-learning 依舊固執地推算著那條懸崖邊的最佳路徑，但極度頻繁的隨機失控會讓它不斷摔下懸崖，導致平均 Reward 數據受到毀滅性的打擊。相對地，SARSA 為了避免頻繁失足跌入懸崖的下場，會被迫規劃出一條極度繞遠的安全路線。`;
+        policyText = `這種高風險的環境直接逼迫 SARSA 退縮到地圖的「最上緣」行走，採取極度保守的態度；而 Q-learning 依然勇敢且危險地緊貼懸崖。`;
+    }
+    else {
+        // Standard case
+        performanceText = `在此參數組合下 (ε=${EPSILON}, α=${ALPHA}, γ=${GAMMA})，Q-learning 會學到環境中最短的最佳路徑（分數理應約為 -13），但是因為其採用了 ε-greedy 探索機制，在訓練過程中會不斷因隨機決策掉入懸崖，導致其訓練期間的平均表現極差。相對於此，SARSA 演算法在更新時考量了實際的探索策略（On-policy），故而學習到了一條花費較多步數但絕對安全的路線，使得其訓練表現明顯優於 Q-learning。`;
+        policyText = `上方輸出的箭頭地圖清楚展示了這個演算法特徵。上半部的 Q-learning 策略指引 Agent 緊貼著懸崖邊緣這條最危險但最短的路徑行走；而下方的 SARSA 策略則指引 Agent 向上繞遠路，刻意遠離懸崖一格，完全避免了因隨機失誤而跌落的懲罰。`;
+    }
+
+    if (GAMMA < 0.5) {
+         performanceText += ` 特別注意的是，折扣因子 (γ=${GAMMA}) 設定得太低了。這代表代理人極度「短視近利」，難以看到遙遠終點的獎勵，容易導致收斂困難或迷失方向。`;
+    }
+
+    if (ALPHA <= 0.1) {
+         performanceText += ` 此外，極低的學習率 (α=${ALPHA}) 會造成代理人更新 Q 值的步伐過慢，因此收斂時間會被拉長，前期的學習曲線可能看起來較平緩甚至未能在指定回合內收斂。`;
+    }
+
+    document.getElementById('analysis-performance').innerText = performanceText;
+    document.getElementById('analysis-policy').innerText = policyText;
+}
+
 // Execute on Click
 startBtn.addEventListener('click', () => {
     updateParams();
@@ -312,6 +342,9 @@ startBtn.addEventListener('click', () => {
         updatePolicyUI(qResults.qTable, 'qGrid');
         updatePolicyUI(sarsaResults.qTable, 'sGrid');
         
+        // Update analysis text based on new params
+        updateAnalysisText();
+
         startBtn.innerText = "Start Full Academic Training";
         startBtn.disabled = false;
         startBtn.classList.replace('bg-green-500', 'bg-blue-600');
