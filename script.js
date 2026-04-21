@@ -5,12 +5,20 @@ const START = {r: 3, c: 0};
 const GOAL = {r: 3, c: 11};
 const ARROW_SYMBOLS = ['↑', '→', '↓', '←']; // 0: Up, 1: Right, 2: Down, 3: Left
 
-// Academic Hyperparameters
-const EPSILON = 0.1;
-const ALPHA = 0.5;
-const GAMMA = 1.0;
-const EPISODES = 500;
-const RUNS = 50;
+// Academic Hyperparameters (dynamic)
+let EPSILON = 0.1;
+let ALPHA = 0.5;
+let GAMMA = 1.0;
+let EPISODES = 500;
+let RUNS = 50;
+
+function updateParams() {
+    EPISODES = parseInt(document.getElementById('inputEpisodes').value) || 500;
+    RUNS = parseInt(document.getElementById('inputRuns').value) || 50;
+    EPSILON = parseFloat(document.getElementById('inputEpsilon').value) || 0;
+    ALPHA = parseFloat(document.getElementById('inputAlpha').value) || 0;
+    GAMMA = parseFloat(document.getElementById('inputGamma').value) || 0;
+}
 
 const startBtn = document.getElementById('startBtn');
 let rewardChart;
@@ -282,11 +290,15 @@ function updatePolicyUI(qTable, containerId) {
 
 // Execute on Click
 startBtn.addEventListener('click', () => {
-    startBtn.innerText = "Computing 50,000 Total Episodes...";
+    updateParams();
+    let totalComputed = EPISODES * RUNS * 2;
+    startBtn.innerText = `Computing ${totalComputed.toLocaleString()} Total Episodes...`;
     startBtn.disabled = true;
 
     // Timeout allows DOM repaint of button before synchronous lockup
     setTimeout(() => {
+        initChart(); // Re-init to match any changes to EPISODES length
+        
         // Run Both Algorithms
         let sarsaResults = runExperiment(true);
         let qResults = runExperiment(false);
