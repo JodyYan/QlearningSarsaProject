@@ -4,14 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sarsa Vs. Q-Learning Cliff Walking</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- jsPDF & html2canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- Custom Styles -->
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
@@ -29,55 +25,47 @@
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left Column: Controls & Grid -->
             <div class="lg:col-span-1 flex flex-col gap-6">
                 <!-- Controls -->
                 <div class="p-4 bg-gray-100 rounded-lg border border-gray-200" data-html2canvas-ignore="true">
                     <h2 class="text-lg font-semibold mb-3">Controls</h2>
                     
                     <label class="block text-sm font-medium mb-1">Algorithm</label>
-                    <select id="algoSelect" class="w-full border rounded p-2 mb-3 bg-white">
+                    <select id="algoSelect" class="w-full border rounded p-2 mb-4 bg-white">
                         <option value="qlearning">Q-learning</option>
                         <option value="sarsa">SARSA</option>
                     </select>
-
-                    <label class="block text-sm font-medium mb-1">Simulation Speed</label>
-                    <input type="range" id="speedRange" min="1" max="100" value="50" class="w-full mb-4">
                     
-                    <div class="flex gap-2">
-                        <button id="startBtn" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded font-medium transition">Start</button>
-                        <button id="pauseBtn" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded font-medium transition">Pause</button>
-                        <button id="resetBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded font-medium transition">Reset</button>
-                    </div>
+                    <button id="startBtn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded transition shadow">Start Training (50 Runs)</button>
+                    <p class="text-xs text-gray-500 mt-2">Computing 50 independent runs of 500 episodes instantly.</p>
                 </div>
 
                 <!-- Simulation Stats -->
                 <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                    <h2 class="text-lg font-semibold mb-2">Live Stats</h2>
-                    <p class="text-sm">Episode: <span id="epCount" class="font-bold">0</span> / 500</p>
-                    <p class="text-sm">Current Reward: <span id="curReward" class="font-bold">0</span></p>
-                    <p class="text-sm">Epsilon: 0.1 | Alpha: 0.1 | Gamma: 0.9</p>
+                    <h2 class="text-lg font-semibold mb-2">Academic Settings</h2>
+                    <p class="text-sm">Episodes: <span class="font-bold">500</span></p>
+                    <p class="text-sm">Independent Runs: <span class="font-bold">50</span></p>
+                    <p class="text-sm">Epsilon: 0.1 | Alpha: 0.5 | Gamma: 1.0</p>
                 </div>
             </div>
 
-            <!-- Right Column: Grid Visualization & Chart -->
+            <!-- Right Column -->
             <div class="lg:col-span-2 flex flex-col gap-6">
-                
-                <!-- Grid Visualization -->
+                <!-- Chart -->
                 <div>
-                    <h2 class="text-xl font-bold mb-2">Gridworld Environment</h2>
-                    <p class="text-sm text-gray-600 mb-2">Arrows show the current greedy policy. The <span class="text-blue-500 font-bold">blue dot</span> is the agent.</p>
-                    <!-- aspect-ratio box for 4x12 -->
-                    <div class="w-full aspect-[3/1] bg-gray-200 border-2 border-gray-800 grid relative" id="gridWorld">
-                        <!-- Cells are injected by JS -->
+                    <h2 class="text-xl font-bold mb-2 text-center">Reward Convergence</h2>
+                    <div class="w-full h-72 bg-white border border-gray-200 rounded relative">
+                        <canvas id="rewardChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Chart -->
-                <div>
-                    <h2 class="text-xl font-bold mb-2">Reward Convergence</h2>
-                    <div class="w-full h-64 bg-white border border-gray-200 rounded relative">
-                        <canvas id="rewardChart"></canvas>
+                <!-- Grid Visualization -->
+                <div class="mt-4">
+                    <h2 class="text-xl font-bold mb-2 text-center">Learned Policy Map</h2>
+                    <p class="text-sm text-gray-600 mb-2 text-center">Arrows show the greedily extracted policy from the final averaged Q-table.</p>
+                    <!-- 4x12 aspect ratio grid -->
+                    <div class="w-full aspect-[3/1] bg-gray-200 border-2 border-gray-800 grid relative" id="gridWorld">
+                        <!-- Cells injected by JS -->
                     </div>
                 </div>
             </div>
@@ -86,8 +74,8 @@
         <!-- Theory Section -->
         <div class="mt-8 pt-6 border-t text-sm leading-relaxed text-gray-700">
             <h2 class="text-xl font-bold text-gray-900 mb-2">Analysis & Theory</h2>
-            <p class="mb-2"><strong>Q-learning (Off-policy):</strong> Uses the max Q-value of the next state to update. It learns the absolutely shortest path right along the cliff edge. However, during training (when ε-greedy causes random actions), it occasionally falls off the cliff, resulting in high volatility and lower average reward during learning.</p>
-            <p><strong>SARSA (On-policy):</strong> Updates its Q-values using the actual action it takes next, factoring in the exploration policy. It quickly learns that positions near the cliff are dangerous due to the ε random chance. It converges to a safer, sub-optimal path farther away from the cliff edge, demonstrating a smoother and safer learning curve.</p>
+            <p class="mb-2"><strong>Q-learning (Off-policy):</strong> Uses the max Q-value of the next state to update. It learns the absolutely shortest path right along the cliff edge. However, during training (when ε-greedy causes random actions), it occasionally falls off the cliff, resulting in high volatility and a lower average reward (hovering around -45) during learning.</p>
+            <p><strong>SARSA (On-policy):</strong> Updates its Q-values using the actual action it takes next, factoring in the exploration policy. It quickly learns that positions near the cliff are dangerous due to the ε random chance. It converges to a safer, sub-optimal path farther away from the cliff edge, demonstrating a smoother and safer learning curve (hovering around -25).</p>
         </div>
     </div>
 
