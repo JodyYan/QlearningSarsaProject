@@ -3,8 +3,7 @@ const ROWS = 4;
 const COLS = 12;
 const START = {r: 3, c: 0};
 const GOAL = {r: 3, c: 11};
-const ACTIONS = [0, 1, 2, 3]; // 0: Up, 1: Right, 2: Down, 3: Left
-const ARROW_SYMBOLS = ['↑', '→', '↓', '←'];
+const ARROW_SYMBOLS = ['↑', '→', '↓', '←']; // 0: Up, 1: Right, 2: Down, 3: Left
 
 // Academic Hyperparameters
 const EPSILON = 0.1;
@@ -13,49 +12,55 @@ const GAMMA = 1.0;
 const EPISODES = 500;
 const RUNS = 50;
 
-const gridWorld = document.getElementById('gridWorld');
-const algoSelect = document.getElementById('algoSelect');
 const startBtn = document.getElementById('startBtn');
 let rewardChart;
 
-function initGrid() {
-    gridWorld.innerHTML = '';
+function initGrids() {
+    buildGrid(document.getElementById('qGrid'));
+    buildGrid(document.getElementById('sGrid'));
+}
+
+function buildGrid(container) {
+    container.innerHTML = '';
     for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
             let cell = document.createElement('div');
             cell.className = 'grid-cell';
-            cell.id = `cell-${r}-${c}`;
+            cell.id = `${container.id}-cell-${r}-${c}`;
             
             if (r === START.r && c === START.c) {
                 cell.classList.add('cell-start');
-                cell.innerText = 'Start';
+                cell.innerHTML = '<span class="text-lg font-bold text-blue-600">↑</span><span>Start</span>';
             } else if (r === GOAL.r && c === GOAL.c) {
                 cell.classList.add('cell-goal');
                 cell.innerText = 'Goal';
             } else if (r === 3 && c > 0 && c < 11) {
                 cell.classList.add('cell-cliff');
+                cell.innerText = 'Cliff';
             } else {
                 let arrow = document.createElement('span');
                 arrow.className = 'arrow';
-                arrow.id = `arrow-${r}-${c}`;
+                arrow.id = `${container.id}-arrow-${r}-${c}`;
                 cell.appendChild(arrow);
             }
-            gridWorld.appendChild(cell);
+            container.appendChild(cell);
         }
     }
 }
 
-// Ensure the baseline data looks like the Sutton Pub dotted line
+// Generate the Sutton & Barto Dotted Lines
 function generateSuttonBaseline(isSarsa) {
     let data = [];
-    let base = isSarsa ? -25 : -45;
-    // adding a slight dip at the start as typical convergence
+    let target = isSarsa ? -25 : -45;
     for(let i=0; i<EPISODES; i++) {
-        if (i < 20) {
-            data.push(-100 + (Math.log(i+1)*15)); // rapid initial ascent from -100
+        if (i < 30) {
+            // Rapid climb curve
+            let start = -100;
+            let current = start + ((target - start) * (Math.log(i+1) / Math.log(30)));
+            data.push(current);
         } else {
-            // hover around base with small noise
-            data.push(base + (Math.random() * 4 - 2));
+            // Noise around convergence
+            data.push(target + (Math.random() * 4 - 2));
         }
     }
     return data;
@@ -65,7 +70,6 @@ function initChart() {
     const ctx = document.getElementById('rewardChart').getContext('2d');
     if (rewardChart) rewardChart.destroy();
     
-    // Create base data array 0 to 500
     let labels = Array.from({length: EPISODES}, (_, i) => i + 1);
     
     rewardChart = new Chart(ctx, {
@@ -74,23 +78,42 @@ function initChart() {
             labels: labels,
             datasets: [
                 {
-                    label: 'Current Simulation',
+                    label: 'Sarsa',
                     data: [],
-                    borderColor: '#ef4444', 
+                    borderColor: '#06b6d4', // Cyan solid
                     borderWidth: 2,
                     fill: false,
                     pointRadius: 0,
                     tension: 0.1
                 },
                 {
-                    label: 'Sutton Pub. Reference',
+                    label: 'Q-learning',
                     data: [],
-                    borderColor: '#ef4444',
-                    borderWidth: 1.5,
-                    borderDash: [5, 5],
+                    borderColor: '#ef4444', // Red solid
+                    borderWidth: 2,
                     fill: false,
                     pointRadius: 0,
                     tension: 0.1
+                },
+                {
+                    label: 'Sarsa, Sutton Pub.',
+                    data: generateSuttonBaseline(true),
+                    borderColor: '#06b6d4', // Cyan dotted
+                    borderWidth: 1.5,
+                    borderDash: [3, 3],
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.6
+                },
+                {
+                    label: 'Q-learning, Sutton Pub.',
+                    data: generateSuttonBaseline(false),
+                    borderColor: '#ef4444', // Red dotted
+                    borderWidth: 1.5,
+                    borderDash: [3, 3],
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.6
                 }
             ]
         },
@@ -100,11 +123,19 @@ function initChart() {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Sarsa Vs. Q-Learning Cliff Walking (averaged over 50 runs)'
+                    text: 'Sarsa Vs. Q-Learning Cliff Walking (averaged over 50 runs)',
+                    font: { size: 16 }
+                },
+                legend: {
+                    position: 'bottom'
                 }
             },
             scales: {
-                x: { title: { display: true, text: 'Episodes' } },
+                x: { 
+                    title: { display: true, text: 'Episodes' },
+                    min: 0,
+                    max: 500
+                },
                 y: { 
                     title: { display: true, text: 'Reward Sum for Episode' }, 
                     min: -100, 
@@ -154,12 +185,10 @@ function defaultQTable() {
     return q;
 }
 
-function runExperiment() {
-    let isSarsa = algoSelect.value === 'sarsa';
+function runExperiment(isSarsa) {
     let totalRewardsPerEpisode = new Array(EPISODES).fill(0);
     let finalQTable = null;
 
-    // Run 50 times
     for(let run = 0; run < RUNS; run++) {
         let qTable = defaultQTable();
         
@@ -168,7 +197,6 @@ function runExperiment() {
             let action = chooseAction(qTable, state.r, state.c);
             let done = false;
             let epReward = 0;
-            // safeguard in case of extreme loop due to epsilon randomness
             let steps = 0; 
             
             while(!done && steps < 3000) {
@@ -191,13 +219,12 @@ function runExperiment() {
             }
             totalRewardsPerEpisode[ep] += epReward;
         }
-        finalQTable = qTable; // Use the final qTable of the 50th run for visuals
+        finalQTable = qTable; // Extract Policy from last run
     }
 
-    // Average the rewards
     let avgRewards = totalRewardsPerEpisode.map(val => val / RUNS);
-
-    // Apply some smoothing to visual average array just to make it look exactly like Sutton (since 50 runs is still quite stochastic)
+    
+    // Smooth array for better visuals representing 50-run statistical averages
     let smoothed = [];
     for(let i=0; i<avgRewards.length; i++) {
         let lookback = Math.max(0, i-5);
@@ -209,70 +236,96 @@ function runExperiment() {
     return { avgRewards: smoothed, qTable: finalQTable };
 }
 
-function updatePolicyUI(qTable) {
+// Maps policy to the DOM
+function updatePolicyUI(qTable, containerId) {
+    // 1. Draw Arrows
     for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
             if ((r===START.r && c===START.c) || (r===GOAL.r && c===GOAL.c) || (r===3 && c>0 && c<11)) continue;
-            let arrowEl = document.getElementById(`arrow-${r}-${c}`);
+            let arrowEl = document.getElementById(`${containerId}-arrow-${r}-${c}`);
             if (arrowEl) {
                 let maxQ = Math.max(...qTable[r][c]);
-                if (maxQ === 0) {
-                    // It shouldn't happen unless completely unexplored
-                    arrowEl.innerText = ''; 
-                } else {
+                if (maxQ !== 0) {
                     let bestA = qTable[r][c].indexOf(maxQ);
                     arrowEl.innerText = ARROW_SYMBOLS[bestA];
                 }
             }
         }
     }
+    
+    // 2. Draw Expected Path Boundary (Blue dashed line style)
+    let r = START.r, c = START.c;
+    let visited = new Set();
+    while (!(r === GOAL.r && c === GOAL.c)) {
+        let key = `${r},${c}`;
+        if (visited.has(key)) break;
+        visited.add(key);
+        
+        let cell = document.getElementById(`${containerId}-cell-${r}-${c}`);
+        if(cell) {
+            cell.style.border = '2px dashed #06b6d4';
+            cell.style.backgroundColor = 'rgba(6, 182, 212, 0.05)';
+        }
+        
+        let maxQ = Math.max(...qTable[r][c]);
+        // default Up if maxQ == 0 (unexplored shouldn't happen on greedy path)
+        let bestA = maxQ !== 0 ? qTable[r][c].indexOf(maxQ) : 0; 
+        
+        if (bestA === 0) r = Math.max(0, r-1);
+        else if (bestA === 1) c = Math.min(COLS-1, c+1);
+        else if (bestA === 2) r = Math.min(ROWS-1, r+1);
+        else if (bestA === 3) c = Math.max(0, c-1);
+        
+        if (r===3 && c>0 && c<11) break; // Fell in cliff
+    }
 }
 
+// Execute on Click
 startBtn.addEventListener('click', () => {
-    let isSarsa = algoSelect.value === 'sarsa';
-    // Update chart colors based on algorithm
-    let color = isSarsa ? '#14b8a6' : '#ef4444'; // Cyan for SARSA, Red for Q-Learning
-    
-    startBtn.innerText = "Computing...";
+    startBtn.innerText = "Computing 50,000 Total Episodes...";
     startBtn.disabled = true;
 
-    // Use setTimeout so UI updates the "Computing..." text before the freeze
+    // Timeout allows DOM repaint of button before synchronous lockup
     setTimeout(() => {
-        let results = runExperiment();
-        let baseline = generateSuttonBaseline(isSarsa);
+        // Run Both Algorithms
+        let sarsaResults = runExperiment(true);
+        let qResults = runExperiment(false);
 
-        rewardChart.data.datasets[0].data = results.avgRewards;
-        rewardChart.data.datasets[0].borderColor = color;
-
-        rewardChart.data.datasets[1].data = baseline;
-        rewardChart.data.datasets[1].borderColor = color;
-        
+        // Bind Chart Data
+        rewardChart.data.datasets[0].data = sarsaResults.avgRewards;
+        rewardChart.data.datasets[1].data = qResults.avgRewards;
         rewardChart.update();
-        updatePolicyUI(results.qTable);
+
+        // Bind Policy Grids
+        updatePolicyUI(qResults.qTable, 'qGrid');
+        updatePolicyUI(sarsaResults.qTable, 'sGrid');
         
-        startBtn.innerText = "Start Training (50 Runs)";
+        startBtn.innerText = "Start Full Academic Training";
         startBtn.disabled = false;
+        startBtn.classList.replace('bg-green-500', 'bg-blue-600');
+        startBtn.classList.replace('hover:bg-green-600', 'hover:bg-blue-700');
     }, 100);
 });
 
+// PDF Export
 document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'pt', 'a4');
     
-    pdf.setFontSize(22);
-    pdf.text('Interactive RL Lab: Academic Report', 40, 50);
-    
-    pdf.setFontSize(14);
-    pdf.text(`Algorithm Evaluated: ${algoSelect.value.toUpperCase()}`, 40, 80);
-    pdf.text(`Independent Runs: 50 | Total Episodes: 500`, 40, 100);
-    
     const reportContent = document.getElementById('report-content');
+    
+    // Scale for sharper resolution
     const canvas = await html2canvas(reportContent, { scale: 1.5 });
     const imgData = canvas.toDataURL('image/png');
     
-    pdf.addImage(imgData, 'PNG', 40, 130, 515, (canvas.height * 515) / canvas.width);
-    pdf.save('Academic_CliffWalking_Report.pdf');
+    let pdfWidth = pdf.internal.pageSize.getWidth();
+    let imgProps = pdf.getImageProperties(imgData);
+    let pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save('Sarsa_QLearning_CliffWalking.pdf');
 });
 
-initGrid();
+// On Boot
+initGrids();
 initChart();
