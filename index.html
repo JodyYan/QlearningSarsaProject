@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q-learning vs SARSA on Cliff Walking</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; max-width: 900px; margin: 0 auto; padding: 2rem; line-height: 1.6; color: #333; }
+        h1 { font-size: 2.5rem; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
+        h2 { font-size: 1.8rem; margin-top: 2rem; color: #444; }
+        .grid { display: grid; gap: 2rem; grid-template-columns: 1fr; }
+        img { max-width: 100%; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .download-btn { display: inline-block; padding: 10px 20px; font-size: 1.1rem; color: #fff; background-color: #007bff; text-decoration: none; border-radius: 5px; margin-top: 1rem; }
+        .download-btn:hover { background-color: #0056b3; }
+        .theory-section { background-color: #f9f9f9; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #007bff; margin-top: 1.5rem; }
+    </style>
+</head>
+<body>
+    <h1>Q-learning vs SARSA on Cliff Walking</h1>
+    <p>This project demonstrates the core differences between an off-policy algorithm (Q-learning) and an on-policy algorithm (SARSA) in the classic 4x12 Cliff Walking environment.</p>
+    
+    <a href="report.pdf" class="download-btn" download>📥 Download Technical Report (PDF)</a>
+
+    <div class="grid">
+        <div>
+            <h2>Learning Curves</h2>
+            <p>Averaged over 50 runs, showing the total reward per episode. Q-learning occasionally falls off the cliff because of its epsilon-greedy exploration, keeping its average reward lower during training. SARSA discovers a safer path.</p>
+            <img src="reward_plot.png" alt="Reward Convergence Plot">
+        </div>
+
+        <div>
+            <h2>Final Policies</h2>
+            <p>Q-learning learns the optimal (but risky) path right along the edge of the cliff. SARSA learns a longer, safer path further from the cliff's edge to avoid large penalties.</p>
+            <img src="policy_map.png" alt="Policy Map Visualization">
+        </div>
+    </div>
+
+    <div class="theory-section">
+        <h2>Theory & Discussion</h2>
+        <p><strong>Off-policy vs. On-policy:</strong> Q-learning updates its estimates using the maximum action value roughly equivalent to adopting the optimal policy, thus learning the optimal but risky strategy. SARSA updates using the value of the next action actually taken, factoring in the epsilon-exploration. This leads SARSA to penalize states near the cliff where an exploration step falls off.</p>
+        <p><strong>Risk Analysis:</strong> During training, Q-learning's reward oscillates more severely and converges to a lower sum. This happens because while the Q-values indicate the optimal policy (walking the edge), the actual agent is still exploring (ε = 0.1), which occasionally makes it step off the cliff. In contrast, SARSA's policy converges to a path farther from the cliff, absorbing the risk of epsilon exploration.</p>
+        <p><strong>Optimal vs. Safe:</strong> In a deterministic test mode (epsilon=0), Q-learning is optimal. However, in applications where exploring or acting randomly can entail catastrophic consequences (e.g., medical treatments, autonomous driving), the more conservative on-policy learning of SARSA may be preferable.</p>
+    </div>
+</body>
+</html>
