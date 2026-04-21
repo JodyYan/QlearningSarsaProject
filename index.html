@@ -100,9 +100,9 @@
             
             <!-- Theory Section -->
             <div class="pt-6 border-t text-sm leading-relaxed text-gray-700 px-4">
-                <h2 class="text-xl font-bold text-gray-900 mb-2">Analysis & Discussion</h2>
-                <p class="mb-2"><strong>Performance Convergence:</strong> According to the charts, Q-learning learns a policy that is optimal in the deterministic sense (reward ~ -13) but suffers highly negative convergence during training (reward ~ -45) due to its $\epsilon$-greedy exploration causing it to step off the cliff constantly. Sarsa, taking the exploration policy into account, learns a longer but safer path, leading to better training performance (reward ~ -25).</p>
-                <p><strong>Greedy Policy Paths:</strong> The final extracted policies (arrows above) demonstrate this tradeoff. The top Q-learning grid directs the agent strictly across the edge row right above the cliff. The bottom SARSA grid directs the agent to safely route one row upwards, preventing fatal mistakes during exploration.</p>
+                <h2 class="text-xl font-bold text-gray-900 mb-2">理論分析與討論</h2>
+                <p class="mb-2"><strong>收斂效能 (Performance Convergence)：</strong>根據圖表顯示，Q-learning 會學到環境中最短的最佳路徑（未掉落懸崖時分數約為 -13），但是因為其採用了 $\epsilon$-greedy 探索機制，在訓練過程中會不斷因隨機決策掉入懸崖，導致其訓練期間的平均表現極差（曲線約在 -45 震盪）。相對於此，SARSA 演算法在更新時考量了實際的探索策略（On-policy），故而學習到了一條花費較多步數但絕對安全的路線，使得其訓練表現明顯優於 Q-learning（曲線約在 -25 穩定）。</p>
+                <p><strong>最終貪婪策略路徑 (Greedy Policy Paths)：</strong>上方輸出的箭頭地圖清楚展示了這個演算法特徵。上半部的 Q-learning 策略指引 Agent 緊貼著懸崖邊緣這條最危險但最短的路徑行走；而下方的 SARSA 策略則指引 Agent 向上繞遠路，刻意遠離懸崖一格，從而完全避免了在實際行走中因隨機失誤而跌落的巨大懲罰。</p>
             </div>
 
         </div>
